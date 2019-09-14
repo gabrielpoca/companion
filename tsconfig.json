@@ -1,15 +1,18 @@
 {
   "compilerOptions": {
-    "incremental": true,
-    "target": "es6",
-    "module": "commonjs",
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
     "allowJs": true,
+    "alwaysStrict": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "build",
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "sourceMap": true,
     "strict": true,
-    "noUnusedLocals": true
-  }
+    "strictNullChecks": true,
+    "target": "es6"
+  },
+  "include": ["./src/*"]
 }

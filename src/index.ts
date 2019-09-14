@@ -4,14 +4,18 @@ import logger from "koa-logger";
 import json from "koa-json";
 import bodyParser from "koa-bodyparser";
 
+import * as Reminders from "./reminders";
+
 const port = process.env.PORT || 4000;
 const app = new Koa();
 const router = new Router();
 
-router.get("/", ctx => {
+router.get("/", async (ctx, next) => {
   ctx.body = {
     message: "Everything is fine"
   };
+
+  return next();
 });
 
 app.use(async (ctx, next) => {

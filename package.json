@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node-dev --respawn --transpileOnly ./src/index.ts",
+    "start": "ts-node-dev --respawn ./src/index.ts",
     "build": "tsc",
     "prod": "node ./build/index.js"
   },
@@ -13,19 +13,21 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^12.7.5",
+    "@types/koa": "^2.0.49",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-json": "^2.0.18",
+    "@types/koa-logger": "^3.1.1",
+    "@types/koa-router": "^7.0.42",
+    "firebase-admin": "^8.5.0",
     "koa": "^2.8.1",
     "koa-bodyparser": "^4.2.1",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
     "koa-router": "^7.4.0",
-    "ts-node-dev": "^1.0.0-pre.42",
+    "nano": "^8.1.0",
     "typescript": "^3.6.3"
   },
   "devDependencies": {
-    "@types/koa": "^2.0.49",
-    "@types/koa-bodyparser": "^4.3.0",
-    "@types/koa-json": "^2.0.18",
-    "@types/koa-logger": "^3.1.1",
-    "@types/koa-router": "^7.0.42"
+    "ts-node-dev": "^1.0.0-pre.42"
   }
 }
