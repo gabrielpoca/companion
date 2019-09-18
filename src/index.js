@@ -3,6 +3,7 @@ const Router = require("koa-joi-router");
 const logger = require("koa-logger");
 const json = require("koa-json");
 const bodyParser = require("koa-bodyparser");
+const helmet = require("koa-helmet");
 
 const User = require("./user");
 
@@ -10,12 +11,6 @@ const Joi = Router.Joi;
 const port = process.env.PORT || 4000;
 const app = new Koa();
 const router = Router();
-
-router.get("/status", ctx => {
-  ctx.body = {
-    message: "Everything is good!"
-  };
-});
 
 router.route({
   method: "post",
@@ -66,18 +61,20 @@ router.route({
   }
 });
 
-app.use(json());
 app.use(logger());
 
 app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
+    console.error(err);
     ctx.status = err.status || 500;
     ctx.body = err.msg;
   }
 });
 
+app.use(helmet());
+app.use(json());
 app.use(bodyParser());
 app.use(router.middleware()).use(router.router.allowedMethods());
 
