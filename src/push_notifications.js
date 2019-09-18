@@ -1,5 +1,5 @@
-import Admin from "firebase-admin";
-import assert from "assert";
+const Admin = require("firebase-admin");
+const assert = require("assert");
 
 assert(!!process.env.FIREBASE_DB);
 
@@ -8,7 +8,7 @@ Admin.initializeApp({
   databaseURL: process.env.FIREBASE_DB
 });
 
-export const send = (title: string, body: string, token: string) =>
+module.exports.send = (title, body, token) =>
   Admin.messaging().send({
     notification: { title, body },
     token
