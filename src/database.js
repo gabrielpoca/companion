@@ -1,3 +1,6 @@
 const Nano = require("nano");
+const assert = require("assert");
 
-module.exports = Nano("http://admin:admin@localhost:5984");
+assert(process.env.COUCHDB_URL);
+
+module.exports = Nano(process.env.COUCHDB_URL);

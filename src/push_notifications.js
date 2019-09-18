@@ -1,7 +1,7 @@
 const Admin = require("firebase-admin");
 const assert = require("assert");
 
-assert(!!process.env.FIREBASE_DB);
+assert(process.env.FIREBASE_DB);
 
 Admin.initializeApp({
   credential: Admin.credential.applicationDefault(),
