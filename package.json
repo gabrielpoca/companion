@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^3.0.6",
     "firebase-admin": "^8.5.0",
     "koa": "^2.8.1",
     "koa-bodyparser": "^4.2.1",

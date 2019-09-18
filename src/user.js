@@ -1,11 +1,12 @@
 const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
 const db = require("./database");
 
 const usersDB = db.use("_users");
+const saltRounds = 10;
 
 const nameToToken = name => {
-  console.log("name", name);
   const hmac = crypto.createHmac("sha256", "secret");
   hmac.update(name);
   return hmac.digest("hex");
@@ -14,6 +15,7 @@ const nameToToken = name => {
 module.exports.create = async ({ email, password }) => {
   const name = Buffer.from(email).toString("base64");
   const id = `org.couchdb.user:${name}`;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   try {
     await usersDB.insert({
@@ -22,13 +24,13 @@ module.exports.create = async ({ email, password }) => {
       name,
       roles: ["user"],
       email,
-      password
+      hashed_passord: hashedPassword
     });
 
     return { id, name, token: nameToToken(name) };
   } catch (e) {
     if (e.statusCode === 409) {
-      const error = new Error("User already exists");
+      const error = new Error("User already registered");
       error.statusCode = 409;
       throw error;
     }
@@ -40,7 +42,13 @@ module.exports.get = async ({ email, password }) => {
   const name = Buffer.from(email).toString("base64");
   const id = `org.couchdb.user:${name}`;
 
-  await usersDB.get(id);
+  const user = await usersDB.get(id);
 
-  return { id, name, token: nameToToken(name) };
+  if (await bcrypt.compare(password, user.hashed_passord)) {
+    return { id, name, token: nameToToken(name) };
+  } else {
+    const error = new Error();
+    error.statusCode = 401;
+    throw error;
+  }
 };
