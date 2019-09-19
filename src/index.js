@@ -6,6 +6,7 @@ const bodyParser = require("koa-bodyparser");
 const helmet = require("koa-helmet");
 
 const User = require("./user");
+const { setup } = require("./database");
 
 const Joi = Router.Joi;
 const port = process.env.PORT || 4000;
@@ -78,6 +79,13 @@ app.use(json());
 app.use(bodyParser());
 app.use(router.middleware()).use(router.router.allowedMethods());
 
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
-});
+setup()
+  .then(() =>
+    app.listen(port, () => {
+      console.log(`Server started on port ${port}`);
+    })
+  )
+  .catch(err => {
+    console.error(err);
+    process.exit(1);
+  });
