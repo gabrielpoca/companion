@@ -27,7 +27,7 @@ module.exports.create = async ({ email, password }) => {
       hashed_passord: hashedPassword
     });
 
-    return { id, name, token: nameToToken(name) };
+    return { id, email, name, token: nameToToken(name) };
   } catch (e) {
     if (e.statusCode === 409) {
       const error = new Error("User already registered");
@@ -45,7 +45,7 @@ module.exports.get = async ({ email, password }) => {
   const user = await usersDB.get(id);
 
   if (await bcrypt.compare(password, user.hashed_passord)) {
-    return { id, name, token: nameToToken(name) };
+    return { id, name, email: user.email, token: nameToToken(name) };
   } else {
     const error = new Error();
     error.statusCode = 401;

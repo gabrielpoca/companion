@@ -29,6 +29,7 @@ router.route({
         body: {
           id: Joi.string(),
           name: Joi.string(),
+          email: Joi.string(),
           token: Joi.string()
         }
       }
@@ -54,6 +55,7 @@ router.route({
         body: {
           id: Joi.string(),
           name: Joi.string(),
+          email: Joi.string(),
           token: Joi.string()
         }
       }
