@@ -1,0 +1,6 @@
+export GOOGLE_APPLICATION_CREDENTIALS=
+export FIREBASE_DB=
+export COUCHDB_URL=http://localhost:5984
+export COUCHDB_USER=admin
+export COUCHDB_PASSWORD=admin
+export COUCHDB_SECRET=secret
