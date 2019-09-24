@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  companion:
+    build: ..
+    restart: unless-stopped
+    environment:
+      COUCHDB_URL: http://couchdb:5984
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+      COUCHDB_SECRET: secret
+      PORT: 4000
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/keys/serviceAccountKey.json
+    volumes:
+      - $GOOGLE_APPLICATION_CREDENTIALS:/tmp/keys/serviceAccountKey.json:ro
+    depends_on:
+      - couchdb
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+
+  couchdb:
+    build: ./couchdb
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: admin
+      COUCHDB_SECRET: secret
+    ports:
+      - "5984:5984"
