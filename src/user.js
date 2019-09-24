@@ -7,7 +7,7 @@ const usersDB = db.use("_users");
 const saltRounds = 10;
 
 const nameToToken = name => {
-  const hmac = crypto.createHmac("sha256", "secret");
+  const hmac = crypto.createHmac("sha1", "secret");
   hmac.update(name);
   return hmac.digest("hex");
 };
