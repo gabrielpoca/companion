@@ -4,6 +4,7 @@ const logger = require("koa-logger");
 const json = require("koa-json");
 const bodyParser = require("koa-bodyparser");
 const helmet = require("koa-helmet");
+const cors = require("@koa/cors");
 
 const User = require("./user");
 const Database = require("./database");
@@ -64,6 +65,14 @@ router.route({
 });
 
 app.use(logger());
+
+if (process.env.NODE_ENV === "production")
+  app.use(
+    cors({
+      origin: "*.gabrielpoca.com"
+    })
+  );
+else app.use(cors());
 
 app.use(async (ctx, next) => {
   try {
