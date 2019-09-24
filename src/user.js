@@ -1,13 +1,16 @@
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const assert = require("assert");
 
 const db = require("./database");
+
+assert(process.env.COUCHDB_SECRET);
 
 const usersDB = db.use("_users");
 const saltRounds = 10;
 
 const nameToToken = name => {
-  const hmac = crypto.createHmac("sha1", "secret");
+  const hmac = crypto.createHmac("sha1", process.env.COUCHDB_SECRET);
   hmac.update(name);
   return hmac.digest("hex");
 };
