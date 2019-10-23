@@ -14,7 +14,7 @@ couchUrl.auth = `${process.env.COUCHDB_USER}:${process.env.COUCHDB_PASSWORD}`;
 
 const n = Nano(couchUrl.format());
 
-module.exports = n;
+module.exports = n.db;
 
 module.exports.setup = async () => {
   try {

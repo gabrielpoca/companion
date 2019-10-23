@@ -8,8 +8,8 @@ Admin.initializeApp({
   databaseURL: process.env.FIREBASE_DB
 });
 
-module.exports.send = (title, body, token) =>
+module.exports.send = token =>
   Admin.messaging().send({
-    notification: { title, body },
+    data: { type: "reminder" },
     token
   });

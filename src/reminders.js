@@ -1,7 +1,8 @@
-const { format, set, isAfter } = require("date-fns");
+const { format, set, isAfter, isBefore } = require("date-fns");
 
-const PushNotifications = require("./push_notifications");
+const PushNotifications = require("./pushNotifications");
 const db = require("./database");
+const config = require("./config");
 
 const getRemindersID = () => format(new Date(), "yyyy/MM/dd");
 
@@ -16,18 +17,26 @@ const getRemindersDB = async () => {
 };
 
 const isTimeToRun = () => {
-  const target = set(new Date(), { hours: 21, minutes: 0 });
+  const start = set(new Date(), {
+    hours: config.reminders.start.hour,
+    minutes: 0
+  });
+  const finish = set(new Date(), {
+    hours: config.reminders.finish.hour,
+    minutes: 0
+  });
   const current = new Date();
 
-  return isAfter(current, target);
+  return isAfter(current, start) && isBefore(current, finish);
 };
 
-const didAlreadyRun = async () => {
+const didAlreadyRun = async remindersDB => {
   try {
     await remindersDB.get(getRemindersID());
     return true;
   } catch (e) {
-    return false;
+    if (e.statusCode === 404) return false;
+    else throw e;
   }
 };
 
@@ -37,7 +46,8 @@ const handleUserDatabase = async dbName => {
   try {
     const found = await userDB.get("journalReminders");
 
-    await PushNotifications.send("new message", "body", found.value);
+    if (found && found.values && found.values.enabled)
+      await PushNotifications.send(found.values.token);
   } catch (e) {
     if (e.statusCode !== 404) console.error(e);
   }
@@ -47,11 +57,9 @@ const run = async () => {
   const remindersDB = await getRemindersDB();
 
   if (!isTimeToRun()) return;
-  if (await didAlreadyRun()) return;
+  if (await didAlreadyRun(remindersDB)) return;
 
-  console.log("sending reminders");
-
-  const allDbs = await db.db.list();
+  const allDbs = await db.list();
 
   await Promise.all(
     allDbs.filter(l => l.startsWith("userdb-")).map(handleUserDatabase)
@@ -60,6 +68,11 @@ const run = async () => {
   return await remindersDB.insert({}, getRemindersID());
 };
 
-module.exports.start = () => {
+const start = () => {
+  run();
   return setInterval(run, 1000 * 60 * 60); // every hour
 };
+
+module.exports.start = start;
+module.exports.getRemindersID = getRemindersID;
+module.exports.run = run;

@@ -4,6 +4,7 @@ const logger = require("koa-logger");
 const json = require("koa-json");
 const bodyParser = require("koa-bodyparser");
 const helmet = require("koa-helmet");
+const cors = require("@koa/cors");
 
 const User = require("./user");
 const Database = require("./database");
@@ -77,6 +78,7 @@ app.use(async (ctx, next) => {
   }
 });
 
+if (process.env.NODE_ENV !== "production") app.use(cors({ origin: "*" }));
 app.use(helmet());
 app.use(json());
 app.use(bodyParser());
