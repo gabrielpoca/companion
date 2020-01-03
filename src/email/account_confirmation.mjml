@@ -1,0 +1,22 @@
+<mjml>
+  <mj-body background-color="#ffffff" font-size="13px">
+    <mj-section>
+      <mj-column>
+        <mj-text align="left">
+          <h1>Hi!</h1>
+          <p>Thank you for signing-up. My name is Gabriel and I'm the developer of Journal.</p>
+          <p>As you probably know, it's not necessary to create an account to use Journal, but with an account, your data is backed-up and can be synchronized across devices.</p>
+          <p>I made Journal because I needed to write my thoughts in a place that's safe and easy to use. Every entry you write in this journal is encrypted with a password that you set yourself when you create an account.</p>
+          <p>If you're a programmer, the whole app is open source and can be scrutinzed.</p>
+          <p>The last step is to confirm your account. If you don't mind, just click the button bellow.</p>
+        </mj-text>
+        <mj-button href="https://journal.gabrielpoca.com/confirm_account&token=" align="left">Confirm my account</mj-button>
+        <mj-text>
+          <p>I hope you enjou the product,</p>
+          <p>Feel free to reach out</p>
+          <p>Gabriel Poca</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

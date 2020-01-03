@@ -1,13 +1,16 @@
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
-const assert = require("assert");
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import assert from "assert";
+import _ from "lodash";
 
-const db = require("./database");
+import db from "./database/index.js";
 
 assert(process.env.COUCHDB_SECRET);
 
 const usersDB = db.use("_users");
 const saltRounds = 10;
+
+const fieldsAllowedForUpdate = ["confirmed_at"];
 
 const nameToToken = name => {
   const hmac = crypto.createHmac("sha1", process.env.COUCHDB_SECRET);
@@ -15,7 +18,7 @@ const nameToToken = name => {
   return hmac.digest("hex");
 };
 
-module.exports.create = async ({ email, password }) => {
+export const create = async ({ email, password }) => {
   const name = Buffer.from(email).toString("base64");
   const id = `org.couchdb.user:${name}`;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -27,7 +30,9 @@ module.exports.create = async ({ email, password }) => {
       name,
       roles: ["user"],
       email,
-      hashed_passord: hashedPassword
+      hashed_password: hashedPassword,
+      confirmation_token: "token",
+      confirmed_at: null
     });
 
     return { id, email, name, token: nameToToken(name) };
@@ -41,13 +46,22 @@ module.exports.create = async ({ email, password }) => {
   }
 };
 
-module.exports.get = async ({ email, password }) => {
+export const update = async ({ user, changes }) => {
+  return usersDB.insert({
+    ...user,
+    ..._._.pick(changes, fieldsAllowedForUpdate)
+  });
+};
+
+export const get = async ({ email, password }) => {
   const name = Buffer.from(email).toString("base64");
   const id = `org.couchdb.user:${name}`;
 
   const user = await usersDB.get(id);
 
-  if (await bcrypt.compare(password, user.hashed_passord)) {
+  const result = await bcrypt.compare(password, user.hashed_password);
+
+  if (result) {
     return { id, name, email: user.email, token: nameToToken(name) };
   } else {
     const error = new Error();

@@ -1,101 +1,110 @@
-require("jasmine");
-
-const dbs = require("./database");
-const reminders = require("./reminders");
-const PushNotifications = require("./pushNotifications");
-const config = require("./config");
+import "jasmine";
+import { getMinutes, getHours } from "date-fns";
+import dbs from "./database/index.js";
+import * as reminders from "./reminders.js";
+import * as PushNotifications from "./pushNotifications.js";
 
 describe("run", () => {
   beforeEach(async () => {
     const dbNames = await dbs.list();
-
     await Promise.all(
       dbNames
         .filter(
-          dbName => ["_global_changes", "_replicaor"].indexOf(dbName) === -1
+          dbName =>
+            ["_global_changes", "_replicaor", "reminders"].indexOf(dbName) ===
+            -1
         )
         .map(dbName => dbs.destroy(dbName))
     );
+
+    try {
+      await dbs.create("reminders");
+    } catch (e) {}
+
+    const reminders = await dbs.use("reminders");
+
+    reminders.list({ include_docs: true }).then(body => {
+      body.rows.forEach(doc => {
+        reminders.destroy(doc.doc._id, doc.doc._rev);
+      });
+    });
   });
 
   it("it sends a push notification", async () => {
-    mockTimeToRunNow();
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
+    const endpoint = "1345";
     const userdb = await createUserDatabase();
-    insertJournalReminder("123", userdb);
+
+    insertJournalReminder(userdb, {
+      endpoint,
+      hour: getHours(new Date()),
+      minute: getMinutes(new Date())
+    });
 
     await reminders.run();
 
-    expect(PushNotifications.send).toHaveBeenCalledWith("123");
+    expect(PushNotifications.send).toHaveBeenCalledWith(
+      `{endpoint:"${endpoint}"}`
+    );
   });
 
   it("it doesn't send a push notification if it's not time to run", async () => {
-    mockTimeToRunLater();
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
     const userdb = await createUserDatabase();
-    insertJournalReminder("123", userdb);
+    insertJournalReminder(userdb, {
+      hour: getHours(new Date()),
+      minute: getMinutes(new Date()) + 31
+    });
 
     await reminders.run();
 
-    expect(PushNotifications.send).not.toHaveBeenCalledWith(
-      jasmine.any(String),
-      jasmine.any(String),
-      "123"
-    );
+    expect(PushNotifications.send).not.toHaveBeenCalled();
   });
 
   it("it doesn't send a push notification if it already sent one today", async () => {
-    mockTimeToRunNow();
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
-    const userdb = await createUserDatabase();
-    insertJournalReminder("123", userdb);
+    const dbName = "userdb-1234";
+    const userdb = await createUserDatabase(dbName);
 
-    await dbs.create("reminders");
+    insertJournalReminder(userdb, {
+      hour: getHours(new Date()),
+      minute: getMinutes(new Date())
+    });
+
     const remindersDB = await dbs.use("reminders");
-    await remindersDB.insert({}, reminders.getRemindersID());
+    await remindersDB.insert({}, reminders.getTodayUserReminderID(dbName));
 
     await reminders.run();
 
-    expect(PushNotifications.send).not.toHaveBeenCalledWith(
-      jasmine.any(String),
-      jasmine.any(String),
-      "123"
-    );
+    expect(PushNotifications.send).not.toHaveBeenCalled();
   });
 });
 
-function mockTimeToRunNow() {
-  const currentHours = new Date().getHours();
-
-  spyOnProperty(config.reminders.start, "hour", "get").and.returnValue(
-    currentHours
-  );
-
-  spyOnProperty(config.reminders.finish, "hour", "get").and.returnValue(
-    currentHours + 1
-  );
+async function createUserDatabase(optName) {
+  const name =
+    optName ||
+    `userdb-${Math.random()
+      .toString()
+      .replace(".", "")}`;
+  await dbs.create(name);
+  return dbs.use(name);
 }
 
-function mockTimeToRunLater() {
-  const currentHours = new Date().getHours();
+function insertJournalReminder(db, opts) {
+  const { hour, minute, endpoint } = opts;
 
-  spyOnProperty(config.reminders.start, "hour", "get").and.returnValue(
-    currentHours - 2
+  return db.insert(
+    {
+      enabled: true,
+      subscription: `{endpoint:"${endpoint || 1234}"}`,
+      time: {
+        hour,
+        minute
+      }
+    },
+    "journalReminder"
   );
-
-  spyOnProperty(config.reminders.finish, "hour", "get").and.returnValue(
-    currentHours - 1
-  );
-}
-
-async function createUserDatabase() {
-  await dbs.create("userdb-123");
-  return dbs.use("userdb-123");
-}
-
-async function insertJournalReminder(token, db) {
-  return db.insert({ value: token }, "journalReminders");
 }

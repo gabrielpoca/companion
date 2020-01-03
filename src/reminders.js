@@ -1,38 +1,29 @@
-const { format, set, isAfter, isBefore } = require("date-fns");
+import { set, format, isAfter, isBefore } from "date-fns";
 
-const PushNotifications = require("./pushNotifications");
-const db = require("./database");
-const config = require("./config");
+import * as PushNotifications from "./pushNotifications.js";
+import db from "./database/index.js";
 
-const getRemindersID = () => format(new Date(), "yyyy/MM/dd");
+export const getTodayUserReminderID = dbName =>
+  format(new Date(), `yyyy/MM/dd`) + dbName;
 
-const getRemindersDB = async () => {
-  try {
-    await db.create("reminders");
-  } catch (e) {
-    console.log("reminders database already exists");
-  }
-
-  return db.use("reminders");
-};
-
-const isTimeToRun = () => {
+const isTimeToRun = (hour, minute) => {
   const start = set(new Date(), {
-    hours: config.reminders.start.hour,
-    minutes: 0
+    hours: hour,
+    minutes: minute - 30
   });
   const finish = set(new Date(), {
-    hours: config.reminders.finish.hour,
-    minutes: 0
+    hours: hour,
+    minutes: minute + 30
   });
+
   const current = new Date();
 
   return isAfter(current, start) && isBefore(current, finish);
 };
 
-const didAlreadyRun = async remindersDB => {
+const didAlreadyRunForUser = async (dbName, remindersDB) => {
   try {
-    await remindersDB.get(getRemindersID());
+    await remindersDB.get(getTodayUserReminderID(dbName));
     return true;
   } catch (e) {
     if (e.statusCode === 404) return false;
@@ -40,39 +31,44 @@ const didAlreadyRun = async remindersDB => {
   }
 };
 
-const handleUserDatabase = async dbName => {
+const sendUserPushNotification = async pushNotification => {
+  const { subscription, enabled, time } = pushNotification;
+
+  if (!subscription || !enabled || !time) return;
+
+  if (!isTimeToRun(time.hour, time.minute)) return;
+
+  await PushNotifications.send(subscription);
+};
+
+const handleUserDatabase = async (dbName, remindersDB) => {
   const userDB = db.use(dbName);
 
   try {
-    const found = await userDB.get("journalReminders");
+    const found = await userDB.get("journalReminder");
 
-    if (found && found.values && found.values.enabled)
-      await PushNotifications.send(found.values.token);
+    if (!found) return;
+    if (await didAlreadyRunForUser(dbName, remindersDB)) return;
+
+    await sendUserPushNotification(found);
   } catch (e) {
     if (e.statusCode !== 404) console.error(e);
   }
 };
 
-const run = async () => {
-  const remindersDB = await getRemindersDB();
-
-  if (!isTimeToRun()) return;
-  if (await didAlreadyRun(remindersDB)) return;
+export const run = async () => {
+  const remindersDB = await db.use("reminders");
 
   const allDbs = await db.list();
 
   await Promise.all(
-    allDbs.filter(l => l.startsWith("userdb-")).map(handleUserDatabase)
+    allDbs
+      .filter(l => l.startsWith("userdb-"))
+      .map(dbName => handleUserDatabase(dbName, remindersDB))
   );
-
-  return await remindersDB.insert({}, getRemindersID());
 };
 
-const start = () => {
+export const start = () => {
   run();
   return setInterval(run, 1000 * 60 * 60); // every hour
 };
-
-module.exports.start = start;
-module.exports.getRemindersID = getRemindersID;
-module.exports.run = run;

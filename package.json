@@ -1,21 +1,23 @@
 {
-  "name": "companion",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "server",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/index.js",
   "scripts": {
-    "test": "jasmine",
-    "start": "nodemon ./src/index.js",
-    "prod": "node ./src/index.js"
+    "test": "babel-node ./jasmine-run.js",
+    "start": "nodemon --exec babel-node ./src/index.js",
+    "build": "babel src -d build",
+    "prod": "node ./build/index.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "@babel/cli": "^7.7.5",
+    "@babel/core": "^7.7.5",
+    "@babel/node": "^7.7.4",
+    "@babel/preset-env": "^7.7.6",
     "@koa/cors": "^2.2.3",
     "axios": "^0.19.0",
     "bcrypt": "^3.0.6",
     "date-fns": "^2.2.1",
-    "firebase-admin": "^8.5.0",
     "koa": "^2.8.1",
     "koa-bodyparser": "^4.2.1",
     "koa-helmet": "^5.1.0",
@@ -23,7 +25,10 @@
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
     "koa-router": "^7.4.0",
-    "nano": "^8.1.0"
+    "lodash": "^4.17.15",
+    "mjml": "^4.5.1",
+    "nano": "^8.1.0",
+    "web-push": "^3.4.3"
   },
   "devDependencies": {
     "jasmine": "^3.5.0",

@@ -1,19 +1,21 @@
-const Koa = require("koa");
-const Router = require("koa-joi-router");
-const logger = require("koa-logger");
-const json = require("koa-json");
-const bodyParser = require("koa-bodyparser");
-const helmet = require("koa-helmet");
-const cors = require("@koa/cors");
+import Koa from "koa";
+import Router from "koa-joi-router";
+import logger from "koa-logger";
+import json from "koa-json";
+import bodyParser from "koa-bodyparser";
+import helmet from "koa-helmet";
+import cors from "@koa/cors";
 
-const User = require("./user");
-const Database = require("./database");
-const Reminders = require("./reminders");
+import * as User from "./user.js";
+import * as Database from "./database/index.js";
+import * as Reminders from "./reminders.js";
 
 const Joi = Router.Joi;
 const port = process.env.PORT || 4000;
 const app = new Koa();
 const router = Router();
+
+import * as emailAccountConfirmation from "./email/account_confirmation.js";
 
 router.route({
   method: "post",
@@ -22,7 +24,9 @@ router.route({
     type: "json",
     body: {
       email: Joi.string().email(),
-      password: Joi.string().max(100)
+      password: Joi.string()
+        .min(12)
+        .max(50)
     },
     output: {
       201: {
@@ -48,7 +52,9 @@ router.route({
     type: "json",
     body: {
       email: Joi.string().email(),
-      password: Joi.string().max(100)
+      password: Joi.string()
+        .min(12)
+        .max(50)
     },
     output: {
       200: {
@@ -64,6 +70,18 @@ router.route({
   handler: async ctx => {
     ctx.body = await User.get(ctx.request.body);
   }
+});
+
+router.route({
+  method: "post",
+  path: "/confirm_account",
+  validate: {
+    type: "json",
+    body: {
+      token: Joi.string()
+    }
+  },
+  handler: async ctx => {}
 });
 
 app.use(logger());
@@ -86,7 +104,7 @@ app.use(router.middleware()).use(router.router.allowedMethods());
 
 Database.setup()
   .then(async () => {
-    await Reminders.start();
+    Reminders.start();
     app.listen(port, () => {
       console.log(`Server started on port ${port}`);
     });

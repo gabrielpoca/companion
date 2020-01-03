@@ -1,15 +1,22 @@
-const Admin = require("firebase-admin");
-const assert = require("assert");
+import assert from "assert";
+import WebPush from "web-push";
 
-assert(process.env.FIREBASE_DB);
+assert(process.env.VAPID_PUBLIC_KEY);
+assert(process.env.VAPID_PRIVATE_KEY);
 
-Admin.initializeApp({
-  credential: Admin.credential.applicationDefault(),
-  databaseURL: process.env.FIREBASE_DB
-});
+const vapidKeys = WebPush.generateVAPIDKeys();
 
-module.exports.send = token =>
-  Admin.messaging().send({
-    data: { type: "reminder" },
-    token
-  });
+console.log(vapidKeys);
+
+WebPush.setVapidDetails(
+  "mailto:me@gabrielpoca.com",
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
+export const send = subscription => {
+  return WebPush.sendNotification(
+    JSON.parse(subscription),
+    JSON.stringify({ type: "reminder" })
+  );
+};
