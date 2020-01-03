@@ -4,10 +4,6 @@ import WebPush from "web-push";
 assert(process.env.VAPID_PUBLIC_KEY);
 assert(process.env.VAPID_PRIVATE_KEY);
 
-const vapidKeys = WebPush.generateVAPIDKeys();
-
-console.log(vapidKeys);
-
 WebPush.setVapidDetails(
   "mailto:me@gabrielpoca.com",
   process.env.VAPID_PUBLIC_KEY,

@@ -10,15 +10,10 @@ services:
       COUCHDB_PASSWORD: admin
       COUCHDB_SECRET: secret
       PORT: 4000
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/keys/serviceAccountKey.json
-    volumes:
-      - $GOOGLE_APPLICATION_CREDENTIALS:/tmp/keys/serviceAccountKey.json:ro
     depends_on:
       - couchdb
     ports:
       - "4000:4000"
-    env_file:
-      - .env
 
   couchdb:
     build: ./couchdb
