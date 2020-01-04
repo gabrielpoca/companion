@@ -51,6 +51,7 @@ const handleUserDatabase = async (dbName, remindersDB) => {
     if (await didAlreadyRunForUser(dbName, remindersDB)) return;
 
     await sendUserPushNotification(found);
+    await remindersDB.insert({}, getTodayUserReminderID(dbName));
   } catch (e) {
     if (e.statusCode !== 404) console.error(e);
   }

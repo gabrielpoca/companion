@@ -30,7 +30,7 @@ describe("run", () => {
     });
   });
 
-  it("it sends a push notification", async () => {
+  it("sends a push notification", async () => {
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
     const endpoint = "1345";
@@ -49,7 +49,7 @@ describe("run", () => {
     );
   });
 
-  it("it doesn't send a push notification if it's not time to run", async () => {
+  it("doesn't send a push notification if it's not time to run", async () => {
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
     const userdb = await createUserDatabase();
@@ -63,7 +63,7 @@ describe("run", () => {
     expect(PushNotifications.send).not.toHaveBeenCalled();
   });
 
-  it("it doesn't send a push notification if it already sent one today", async () => {
+  it("doesn't send a push notification if it already sent one today", async () => {
     spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
 
     const dbName = "userdb-1234";
@@ -80,6 +80,27 @@ describe("run", () => {
     await reminders.run();
 
     expect(PushNotifications.send).not.toHaveBeenCalled();
+  });
+
+  it("saves an entry in the reminders database when a push notification is sent", async () => {
+    spyOn(PushNotifications, "send").and.returnValue(Promise.resolve(true));
+
+    const dbName = "userdb-1234";
+    const userdb = await createUserDatabase(dbName);
+
+    insertJournalReminder(userdb, {
+      hour: getHours(new Date()),
+      minute: getMinutes(new Date())
+    });
+
+    const remindersDB = await dbs.use("reminders");
+
+    await reminders.run();
+
+    expect(PushNotifications.send).toHaveBeenCalled();
+    expect(
+      (await remindersDB.get(reminders.getTodayUserReminderID(dbName)))._id
+    ).toBeTruthy();
   });
 });
 
