@@ -5,7 +5,7 @@ assert(process.env.VAPID_PUBLIC_KEY);
 assert(process.env.VAPID_PRIVATE_KEY);
 
 WebPush.setVapidDetails(
-  "mailto:me@gabrielpoca.com",
+  "mailto:mail@gabrielpoca.com",
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );

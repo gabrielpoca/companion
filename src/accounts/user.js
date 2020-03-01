@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import assert from "assert";
 import _ from "lodash";
 
-import db from "./database/index.js";
+import { db } from "../database";
 
 assert(process.env.COUCHDB_SECRET);
 

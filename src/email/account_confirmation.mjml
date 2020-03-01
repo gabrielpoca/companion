@@ -4,7 +4,7 @@
       <mj-column>
         <mj-text align="left">
           <h1>Hi!</h1>
-          <p>Thank you for signing-up. My name is Gabriel and I'm the developer of Journal.</p>
+          <p>Thank you for signing-up. My name is Gabriel and I'm the solo developer of Journal.</p>
           <p>As you probably know, it's not necessary to create an account to use Journal, but with an account, your data is backed-up and can be synchronized across devices.</p>
           <p>I made Journal because I needed to write my thoughts in a place that's safe and easy to use. Every entry you write in this journal is encrypted with a password that you set yourself when you create an account.</p>
           <p>If you're a programmer, the whole app is open source and can be scrutinzed.</p>

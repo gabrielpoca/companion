@@ -1,7 +1,7 @@
 import { set, format, isAfter, isBefore } from "date-fns";
 
-import * as PushNotifications from "./pushNotifications.js";
-import db from "./database/index.js";
+import * as PushNotifications from "./pushNotifications";
+import { db } from "../database";
 
 export const getTodayUserReminderID = dbName =>
   format(new Date(), `yyyy/MM/dd`) + dbName;

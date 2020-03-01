@@ -5,111 +5,82 @@ import json from "koa-json";
 import bodyParser from "koa-bodyparser";
 import helmet from "koa-helmet";
 import cors from "@koa/cors";
+import ratelimit from "koa-ratelimit";
 
-import * as User from "./user.js";
-import * as Database from "./database/index.js";
-import * as Reminders from "./reminders.js";
+import * as database from "./database";
+import * as reminders from "./reminders/index";
+import * as accounts from "./accounts";
 
-const Joi = Router.Joi;
 const port = process.env.PORT || 4000;
 const app = new Koa();
-const router = Router();
-
-import * as emailAccountConfirmation from "./email/account_confirmation.js";
-
-router.route({
-  method: "post",
-  path: "/sign_up",
-  validate: {
-    type: "json",
-    body: {
-      email: Joi.string().email(),
-      password: Joi.string()
-        .min(12)
-        .max(50)
-    },
-    output: {
-      201: {
-        body: {
-          id: Joi.string(),
-          name: Joi.string(),
-          email: Joi.string(),
-          token: Joi.string()
-        }
-      }
-    }
-  },
-  handler: async ctx => {
-    ctx.status = 201;
-    ctx.body = await User.create(ctx.request.body);
-  }
-});
-
-router.route({
-  method: "post",
-  path: "/sign_in",
-  validate: {
-    type: "json",
-    body: {
-      email: Joi.string().email(),
-      password: Joi.string()
-        .min(12)
-        .max(50)
-    },
-    output: {
-      200: {
-        body: {
-          id: Joi.string(),
-          name: Joi.string(),
-          email: Joi.string(),
-          token: Joi.string()
-        }
-      }
-    }
-  },
-  handler: async ctx => {
-    ctx.body = await User.get(ctx.request.body);
-  }
-});
-
-router.route({
-  method: "post",
-  path: "/confirm_account",
-  validate: {
-    type: "json",
-    body: {
-      token: Joi.string()
-    }
-  },
-  handler: async ctx => {}
-});
+const db = new Map();
+let server;
 
 app.use(logger());
+
+if (process.env.NODE_ENV === "production") {
+  app.use(
+    ratelimit({
+      driver: "memory",
+      db,
+      duration: 15000,
+      errorMessage: "Sometimes You Just Have to Slow Down.",
+      id: ctx => {
+        return ctx.ip;
+      },
+      max: 5,
+      disableHeader: true,
+      whitelist: ctx => {
+        if (ctx.status === 404 && ctx.method === "GET") return true;
+        return false;
+      }
+    })
+  );
+}
 
 app.use(async (ctx, next) => {
   try {
     await next();
   } catch (err) {
-    console.error(err);
-    ctx.status = err.status || 500;
-    ctx.body = err.msg;
+    console.log(err);
+    if (err.isAxiosError) {
+      ctx.status = err.response.status || 500;
+      ctx.body = err.response.data;
+    } else {
+      ctx.status = err.status || 500;
+      ctx.body = err.msg;
+    }
   }
 });
 
-if (process.env.NODE_ENV !== "production") app.use(cors({ origin: "*" }));
+if (process.env.NODE_ENV !== "production") app.use(cors({ credentials: true }));
+
 app.use(helmet());
 app.use(json());
 app.use(bodyParser());
-app.use(router.middleware()).use(router.router.allowedMethods());
 
-Database.setup()
-  .then(async () => {
-    Reminders.start();
-    app.listen(port, () => {
-      console.log(`Server started on port ${port}`);
+accounts.init(app);
+database.init(app);
+
+function start(customPort) {
+  return database
+    .setup()
+    .then(async () => {
+      reminders.start();
+      server = app.listen(customPort || port);
+    })
+    .catch(err => {
+      console.error(err);
+      process.exit(1);
     });
-  })
-  .catch(err => {
-    console.error(err);
-    process.exit(1);
-  });
+}
+
+function stop() {
+  server.close();
+}
+
+if (!module.parent) {
+  start();
+}
+
+export { start, stop };
