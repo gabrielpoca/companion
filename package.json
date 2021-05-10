@@ -26,7 +26,7 @@
     "koa-logger": "^3.2.1",
     "koa-ratelimit": "^4.2.1",
     "koa-router": "^7.4.0",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "mjml": "^4.5.1",
     "nano": "^8.1.0",
     "web-push": "^3.4.3"
